@@ -1,0 +1,13 @@
+{
+	"author": "Greg Strange",
+	"version": "1.0.0",
+	"long_title": "Hopper HATEOAS rack",
+	"shortcode": "content",
+	"files":
+	{
+        "content.metadata.json": "sha256:21198effdd7231fa520c801e3504f48b1757a145fde72ef61d0442b5c16848e5",
+        "content.rack.php": "sha256:80f00b9fb106efe2c97d2943d4404fde0f90e2e79bd6b08e6b417d8f6ca4590d",
+        "tpl/modal/login.modal.tpl": "sha256:e316c0fa4f235589dfb185808ee22acffcbee267f612258b01907aef368a7c89",
+        "tpl/page/index.tpl": "sha256:f2c98d1c591b2040d81b4600e8cbd00ef149ea3e92e0899d8061e7a63df10d68"
+	}
+}

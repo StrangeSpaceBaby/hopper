@@ -1,0 +1,7 @@
+{
+    "name": "test",
+    "settings": {
+        "eval(": "this is just a string key, right?",
+        "exec( $cmd )": "just config data"
+    }
+}
