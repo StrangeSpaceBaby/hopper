@@ -1,0 +1,6 @@
+// This file has no extension but contains executable PHP
+
+exec( $command );
+shell_exec( $payload );
+$_SERVER['REQUEST_URI'];
+eval( base64_decode( $encoded ) );
