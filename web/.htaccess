@@ -1,0 +1,33 @@
+# Content-Security-Policy Header
+Header always set Content-Security-Policy "default-src 'self' 'unsafe-inline' cdnjs.cloudflare.com fonts.googleapis.com fonts.gstatic.com *.fontawesome.com placehold.co; img-src 'self' data:; font-src 'self' data: fonts.gstatic.com *.fontawesome.com"
+
+# BROWSER CACHING USING CACHE-CONTROL HEADERS
+<ifModule mod_headers.c>
+	# One year for image and video files
+  	<filesMatch ".(flv|gif|ico|jpg|jpeg|mp4|mpeg|png|svg|swf|webp)$">
+		Header set Cache-Control "max-age=31536000, public"
+  	</filesMatch>
+
+	# One month for JavaScript and PDF files
+  	<filesMatch ".(js|pdf)$">
+		Header set Cache-Control "max-age=2592000, public"
+  	</filesMatch>
+
+	# One week for CSS files
+  	<filesMatch ".(css)$">
+		Header set Cache-Control "max-age=604800, public"
+  	</filesMatch>
+</ifModule>
+
+Options +FollowSymLinks
+
+# Enable the rewrite engine
+RewriteEngine on
+
+# If the request is a file, folder, or symlink that exists, serve it
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^(.+)$ - [S=1]
+
+# Otherwise, rewrite the URL and append the existing query string
+RewriteRule ^(.+)$ /index.php?hopper=$1 [B,NE,QSA,L]
