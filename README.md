@@ -9,7 +9,7 @@
 ![Badge showing Version is Alpha-Experimental](https://img.shields.io/badge/Version-0.001--Alpha--Experimental-orange) ![Badge for GitHub Pull Requests](https://img.shields.io/github/issues-pr/StrangeSpaceBaby/hopper)
 
 
-A security-first, multi-tenant-first API framework named for [Grace Hopper](https://en.wikipedia.org/wiki/Grace_Hopper). She was a Rear Admiral in the US Navy, a pioneer of machine-independent programming languages, a compiler inventor and the person who made software accessible to humans who weren't mathematicians. The framework's philosophy of making the right thing the obvious thing is borrowed directly from her..
+A security-first, multi-tenant-first API framework named for [Grace Hopper](https://en.wikipedia.org/wiki/Grace_Hopper). She was a Rear Admiral in the US Navy, a pioneer of machine-independent programming languages, a compiler inventor and the person who made software accessible to humans who weren't mathematicians. The framework's philosophy of making the right thing the obvious thing is borrowed directly from her.
 
 Core architecture is designed and actively being built out.
 
@@ -36,13 +36,13 @@ Hopper also experiments with a new architectural design pattern for frameworks t
 
 **Rack-centric organization.** Everything, including Hopper internals, is organized into "racks".  Racks are logical code bundles with a consistent directory structure for uniformity of address by Hopper.
 
-**Explicit execution contexts.** Each rack declares its access surfaces through discrete context files: `{rack}.hook.php` for web, `{rack}.cli.php` for CLI, `{rack}.cron.php` for scheduled tasks. No file means no access. This is not security by absence — it is security by explicit declaration.
+**Explicit execution contexts.** Each rack declares its access surfaces through discrete context files: `{rack}.hook.php` for web, `{rack}.cli.php` for CLI, `{rack}.cron.php` for scheduled tasks. No file means no access. This is not security by absence, but by explicit declaration.
 
 **Structural tenant isolation.** Because of the capability gates in Hopper, a rack must request a database connection that is already pre-configured. All queries are automatically scoped to the current tenant. Because of the private properties of the db connector and in conjunction with request preservation through CONSTANTS, the tenant_id of the current request _cannot be overriden_. Attempts to manipulate `tenant_id` after it is set are detected, logged with a full backtrace, and treated as intrusion events. Tenant identity is immutable for the lifetime of a request.
 
 **Query building and execution are decoupled to improve secrets management and improve performance.** Hopper's QueryBuilder constructs and validates queries including schema validation and anomaly detection without touching a database connection. Execution is a separate, explicit step through the application context that requires a HopperQuery object to execute a query. String queries can never be run without explicit and `defined()` environment variables.
 
-**Unary execution.** One request, one path. No magic, no event soup, no middleware stack that requires spelunking to understand what actually ran. The rack is the middleware.
+**Unary execution path.** One request, one path. No magic, no event soup, no middleware stack that requires spelunking to understand what actually ran. The rack is the middleware.
 
 ## Security Model
 
@@ -54,7 +54,3 @@ Hopper also experiments with a new architectural design pattern for frameworks t
 - Path-based permission system: the `perm` table keys directly to hook methods
 - Role-based access control via `role_perm` junction, with module-level subscription gating
 - Per-channel, per-request logging with ULID-based request fingerprints for cross-file correlation
-
-## Named For
-
-
