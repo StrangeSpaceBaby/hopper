@@ -1,0 +1,13 @@
+{
+	"author": "Greg Strange",
+	"version": "1.0.0",
+	"long_title": "Hopper core rack",
+	"shortcode": "hopper",
+	"files":
+	{
+		"hopper.cli.php": "sha256:a57dd3d6b47ba9e20710deb7ad1650e8acc724749ff249046050fb19c0a47784",
+		"hopper.rack.php": "sha256:a3268dbb7a5ced7600e4b17caea1dd577d93d92b867f72a46ad6e08a6f7fa1d3",
+		"logic/logic.logic.php": "sha256:35b388d2508c8c7a6ffa2fbd60f22a9410897c7b7f339de586affb886cfa04ae",
+		"logic/rack.logic.php": "sha256:05bafd8e343e3527b4bd38244fac6a3ef0aab98d2d9641c87c1c4957a45f970b"
+	}
+}
