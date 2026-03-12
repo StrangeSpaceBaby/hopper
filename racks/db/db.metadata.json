@@ -1,0 +1,9 @@
+{
+    "rack": "hopper_pdo",
+    "name": "Hopper PDO Proxy",
+    "desc": "A Hopper-oriented proxy class to enforce multi-tenancy among other considerations",
+    "author": "Greg Strange",
+    "version": "0.0.1",
+    "version_date": "2026-03-01",
+    "skills": []
+}
