@@ -1,7 +1,8 @@
 {
-    "rack": "rack_test",
-    "author": "Hopper Test Rack",
-    "version": "1.0.0",
-    "version_date": "2025-03-01",
-	"skills": [ "db", "mail", "" ]
+	"author": "Greg Strange",
+	"version": "1.0.0",
+	"long_title": "Hopper test rack",
+	"shortcode": "rack_test",
+    "files": {},
+	"skills":{}
 }

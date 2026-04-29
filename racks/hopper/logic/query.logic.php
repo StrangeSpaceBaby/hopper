@@ -1,5 +1,7 @@
 <?php
 
+namespace App\racks\hopper\logic;
+
 /**
  * HopperQuery - Query builder with schema validation and observability
  * 
@@ -8,7 +10,7 @@
  * 
  * Must be passed to $hopper_app->query( $db_query_obj ) for execution.
  */
-class HopperQuery
+class query_logic extends logic_logic
 {
 	private string $model_name; // Used to instantiate the proper model object
 	private object $model;
@@ -55,7 +57,8 @@ class HopperQuery
 	private function set_model()
 	{
 		// Instantiate the hopper model for the passed schema
-		
+		p( 'somethign somethign model load' );
+		exit;
 	}
 
 	/**
