@@ -1,10 +1,11 @@
 <?php
 
+namespace App\racks\hopper\logic;
+
 class logic_logic
 {
 	public function __construct()
 	{
-		p( "logic_logic" );
 	}
 
 	public function __toString()

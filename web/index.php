@@ -1,51 +1,43 @@
 <?php
 
-function p( $print )
-{
-	print "<pre>\n";
-	print_r( $print );
-	print "</pre>";
-}
-
 ini_set( 'display_errors', 1 );
 
-define( 'REQUEST_TIME', $_SERVER['REQUEST_TIME_FLOAT'] );
-define( 'REQUEST_URI', $_SERVER['REQUEST_URI'] );
-define( 'RACKS', realpath( '../racks' ) . DIRECTORY_SEPARATOR );
-
-$uri = $_SERVER['REQUEST_URI'];
-if( !$uri )
+function p( $print )
 {
-	throw new InvalidArgumentException( '!$_SERVER["REQUEST_URI"]' );
+	$now = microtime( TRUE );
+	print "\n<pre>{$now} --- ";
+	print_r( $print );
+	print "</pre>\n";
 }
 
-if( '/' == $uri )
-{
-	$uri = '/content/page/index';
-}
+spl_autoload_register(
+	function( $class )
+	{
+		$class_file = str_replace( "App\\", '', $class );
+		$parts = explode( "\\", $class_file );
+		$class_name = array_pop( $parts );
+		$path = HPR_BASE_DIR . implode( "/", $parts ) . "/" . str_replace( '_', '.', $class_name ) . '.php';
 
-list( $rack, $method, $args ) = explode( '/', substr( $uri, 1 ), 3 );
-$rack_class = $rack . "_rack";
-$rack_file = RACKS . "{$rack}/{$rack}.rack.php";
+		if( !file_exists( $path ) )
+		{
+			throw new Exception( "{$path} for {$class} ({$class_name}) !exist" );
+		}
 
-define( 'RACK', $rack ?? '' );
-define( 'RACK_CLASS', $rack_class ?? '' );
-define( 'RACK_FILE', $rack_file ?? '' );
-define( 'RACK_METHOD', $method ?? '' );
-define( 'RACK_ARGS', $args ?? '' );
+		require_once( $path );
+	}
+);
 
-if( !file_exists( RACK_FILE ) )
-{
-	throw new InvalidArgumentException( RACK . " not found" );
-}
+define( 'HPR_REQUEST_TIME', $_SERVER['REQUEST_TIME_FLOAT'] );
+define( 'HPR_REQUEST_URI', $_SERVER['REQUEST_URI'] );
+define( 'HPR_BASE_DIR', realpath( '../') . "/" );
 
-require_once( RACKS . '/hopper/hopper.rack.php' );
+$request = explode( "/", HPR_REQUEST_URI );
+array_shift( $request ); // removes leading /
+$rack_name = $request[0];
+$rack_method = $request[1];
 
-hopper_rack::rack_is_installed( 'hopper' );
-hopper_rack::rack_is_installed( RACK );
-
-require_once( RACK_FILE );
+$rack_class = "App\\racks\\{$rack_name}\\{$rack_name}_rack";
 
 // Reflection in future
-new $rack_class()->$method();
+new $rack_class()->$rack_method();
 exit;
