@@ -7,7 +7,8 @@
  * Usage: hopper <scope:command> [arguments]
  * 
  * Commands:
- *   rack:install <rack-name>	Scan and install a rack
+ *   rack:install <rack-name>     Scan and install a rack
+ *   rack:generate <rack-name>    Generate a new rack skeleton
  */
 
 define( 'RACKS_DIR', dirname( __FILE__, 2 ) . "/" );
@@ -41,6 +42,10 @@ const DANGEROUS_PATTERNS = [
 	'/\brequire\s*\(\s*\$/i' => 'Dynamic require',
 	'/\brequire_once\s*\(\s*\$/i' => 'Dynamic require_once',
 ];
+
+// Valid skills to add to rack capabilities
+// @TODO db fetch values
+const VALID_SKILLS = [ 'db', 'mail', 'payment' ];
 
 class HopperCLI
 {
@@ -88,6 +93,107 @@ class HopperCLI
 		$this->$method();
 	}
 
+	private function cmd_rack_generate() : void
+	{
+		if ( !isset( $this->params[0] ) )
+		{
+			$this->error( "Usage: hopper rack:generate <rack-name>" );
+			exit( 1 );
+		}
+
+		$rackName = $this->params[0];
+		$rackDir = RACKS_DIR . $rackName . DIRECTORY_SEPARATOR;
+
+		// Check rack doesn't already exist
+		if ( is_dir( $rackDir ) )
+		{
+			$this->error( "Rack already exists: {$rackDir}" );
+			exit( 1 );
+		}
+
+		// Create directory
+		if ( !mkdir( $rackDir, 0755, true ) )
+		{
+			$this->error( "Failed to create directory: {$rackDir}" );
+			exit( 1 );
+		}
+
+		// Create metadata
+		$metadata = [
+			'rack' => $rackName,
+			'name' => '',
+			'desc' => '',
+			'author' => '',
+			'version' => '0.0.1',
+			'version_date' => date( 'Y-m-d' ),
+			'skills' => []
+		];
+
+		$metadataFile = $rackDir . $rackName . '.metadata.json';
+		$written = file_put_contents(
+			$metadataFile,
+			json_encode( $metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES )
+		);
+
+		if ( FALSE == $written )
+		{
+			$this->error( "Failed to write metadata file" );
+			exit( 1 );
+		}
+
+		// Create rack class
+		$rackClass = <<<PHP
+<?php
+
+class {$rackName}_rack extends rack_logic
+{
+	public function __construct()
+	{
+		parent::__construct();
+	}
+}
+PHP;
+
+		// Create model class
+		$rackClass = <<<PHP
+<?php
+
+class {$rackName}_model extends model_logic
+{
+	public function __construct()
+	{
+		parent::__construct();
+	}
+}
+PHP;
+
+		$rackFile = $rackDir . $rackName . '.rack.php';
+		$written = file_put_contents( $rackFile, $rackClass );
+
+		if ( FALSE == $written )
+		{
+			$this->error( "Failed to write rack file" );
+			exit( 1 );
+		}
+
+		$rackFile = $rackDir . $rackName . '.model.php';
+		$written = file_put_contents( $rackFile, $rackClass );
+
+		if ( FALSE == $written )
+		{
+			$this->error( "Failed to write model file" );
+			exit( 1 );
+		}
+
+		$this->success( "Rack '{$rackName}' generated successfully." );
+		$this->info( "{$rackDir}" );
+		$this->info( "{$rackDir}/{$rackName}.metadata.json" );
+		$this->info( "{$rackDir}/{$rackName}.rack.php" );
+		$this->info( "" );
+		$this->info( "Edit metadata to add necessary skills and run:" );
+		$this->info( "hopper rack:install {$rackName}" );
+	}
+
 	private function cmd_rack_install() : void
 	{
 		if ( !isset( $this->params[0] ) )
@@ -115,16 +221,51 @@ class HopperCLI
 		}
 
 		$metadata = json_decode( file_get_contents( $metadataFile ), true );
-		if ( json_last_error() !== JSON_ERROR_NONE )
+		if ( JSON_ERROR_NONE !== json_last_error() )
 		{
 			$this->error( "Invalid {$rackName}.metadata.json: " . json_last_error_msg() );
 			exit( 1 );
 		}
 
 		$this->info( "Installing rack: {$rackName}" );
+		$this->info( "Name: " . ( $metadata['name'] ?? 'Unknown' ) );
+		$this->info( "Description: " . ( $metadata['desc'] ?? '' ) );
 		$this->info( "Author: " . ( $metadata['author'] ?? 'Unknown' ) );
 		$this->info( "Version: " . ( $metadata['version'] ?? 'Unknown' ) );
 		$this->info( "" );
+
+		// Display and validate skills
+		$skills = $metadata['skills'] ?? [];
+		$invalidSkills = [];
+
+		if ( empty( $skills ) )
+		{
+			$this->info( "Skills: none requested" );
+		}
+		else
+		{
+			$this->warn( "Skills requested:" );
+			foreach ( $skills as $skill )
+			{
+				if ( in_array( $skill, VALID_SKILLS ) )
+				{
+					$this->info( "  - {$skill}" );
+				}
+				else
+				{
+					$this->error( "  - {$skill} (INVALID)" );
+					$invalidSkills[] = $skill;
+				}
+			}
+		}
+		$this->info( "" );
+
+		// Reject if invalid skills requested
+		if ( !empty( $invalidSkills ) )
+		{
+			$this->error( "Rack requests invalid skills. Installation aborted." );
+			exit( 1 );
+		}
 
 		// Get all files, hash them, and scan for dangerous patterns
 		$allFiles = $this->getAllFiles( $rackDir );
@@ -160,9 +301,9 @@ class HopperCLI
 				$this->warn( "  {$file}:" );
 				foreach ( $patterns as $pattern )
 				{
-					$this->info( "	- {$pattern['description']}" );
-					$this->info( "	  Match: {$pattern['match']}" );
-					$this->info( "	  Line {$pattern['line']}: {$pattern['context']}" );
+					$this->info( "    - {$pattern['description']}" );
+					$this->info( "      Match: {$pattern['match']}" );
+					$this->info( "      Line {$pattern['line']}: {$pattern['context']}" );
 				}
 				$this->info( "" );
 			}
@@ -174,16 +315,17 @@ class HopperCLI
 		
 		$response = $this->prompt( "Proceed with installation? (y/n)" );
 
-		if ( strtolower( $response ) !== 'y' )
+		if ( 'y' !== strtolower( $response ) )
 		{
 			$this->info( "Installation cancelled." );
 			exit( 0 );
 		}
 
-		// Generate manifest
+		// Generate manifest with skills
 		$manifest = [
 			'rack' => $rackName,
 			'installed_at' => date( 'c' ),
+			'skills' => $skills,
 			'files' => $fileHashes
 		];
 
@@ -193,7 +335,7 @@ class HopperCLI
 			json_encode( $manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) 
 		);
 
-		if ( $written === false )
+		if ( FALSE == $written )
 		{
 			$this->error( "Failed to write manifest file" );
 			exit( 1 );
@@ -262,7 +404,8 @@ class HopperCLI
 		echo "Usage: hopper <scope:command> [arguments]\n";
 		echo "\n";
 		echo "Commands:\n";
-		echo "  rack:install <rack-name>	Scan and install a rack\n";
+		echo "  rack:generate <rack-name>   Generate a new rack skeleton\n";
+		echo "  rack:install <rack-name>    Scan and install a rack\n";
 		echo "\n";
 	}
 
@@ -288,5 +431,4 @@ class HopperCLI
 }
 
 // Run
-$cli = new HopperCLI( $argv );
-$cli->run();
+new HopperCLI( $argv )->run();
